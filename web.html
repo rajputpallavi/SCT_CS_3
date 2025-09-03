@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strengthify - Password Strength Checker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Midnight Spectra -->
+    <!-- Application Structure Plan: A redesigned single-view dashboard. The core interactive elements are now housed within a two-tiered visual structure. The top section, with a soft background, contains the main title, password input, and progress bar, creating a focused, task-oriented area. The bottom section, with a separate background, is dedicated to the detailed criteria list. This visual separation enhances clarity and guides the user's eye from the high-level strength score to the specific requirements, making the tool more intuitive and less overwhelming. -->
+    <!-- Visualization & Content Choices: 1. Password Input: A bold, visually distinct input field with a prominent focus ring. Goal: Usability & Security. Interaction: A toggle button shows/hides the password with a subtle animation. 2. Overall Strength: A progress bar with more distinct, vibrant colors that pop against the background. Goal: Inform. Interaction: Bar width and color transition smoothly. Justification: Provides immediate, high-impact feedback. 3. Strength Criteria Checklist: A dynamic list with colored icons and text. Goal: Educate & Guide. Interaction: Icons and text change color and state instantly. Justification: Visually reinforces the progress and educates the user on best practices. All elements are carefully placed within a well-shadowed card to create a premium feel. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .shadow-3xl {
+            box-shadow: 0 20px 60px -5px rgba(0, 0, 0, 0.4), 0 10px 30px -5px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-black flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-lg mx-auto bg-gray-800 rounded-2xl shadow-3xl overflow-hidden">
+
+        <!-- Header and Input Section -->
+        <div class="bg-gray-800 p-6 md:p-10 space-y-8">
+            <header class="text-center">
+                <h1 class="text-4xl font-extrabold text-white tracking-tight">Strengthify</h1>
+                <p class="text-gray-400 mt-2 text-lg">Create a stronger password, step by step.</p>
+            </header>
+
+            <div class="space-y-4">
+                <label for="passwordInput" class="block text-sm font-medium text-gray-400">Enter your password</label>
+                <div class="relative">
+                    <input type="password" id="passwordInput" class="w-full px-5 py-3 pr-12 border-2 border-indigo-500 rounded-lg bg-gray-900 text-white focus:ring-4 focus:ring-indigo-300 focus:border-indigo-400 transition-all duration-300 shadow-sm" placeholder="••••••••">
+                    <button id="toggleVisibility" class="absolute inset-y-0 right-0 px-4 flex items-center text-gray-400 hover:text-indigo-600 transition-colors duration-200">
+                        <span id="eyeIcon" class="text-lg">👁️</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-400">Password Strength</span>
+                    <span id="strengthText" class="text-sm font-bold text-gray-500 transition-colors duration-300"></span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-2.5 overflow-hidden shadow-inner">
+                    <div id="progressBar" class="h-full rounded-full transition-all duration-500 ease-in-out" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Criteria Section -->
+        <div id="criteria" class="bg-gray-900 p-6 md:p-10 space-y-3 pt-6 rounded-b-2xl">
+            <p class="text-sm font-semibold text-gray-300">Your password should contain:</p>
+            <ul class="space-y-2">
+                <li id="length" class="flex items-center text-sm text-gray-500 transition-colors duration-200">
+                    <span class="w-5 h-5 flex-shrink-0 flex items-center justify-center mr-2.5 font-bold transition-transform transform scale-100">✗</span>
+                    At least 8 characters
+                </li>
+                <li id="lowercase" class="flex items-center text-sm text-gray-500 transition-colors duration-200">
+                    <span class="w-5 h-5 flex-shrink-0 flex items-center justify-center mr-2.5 font-bold transition-transform transform scale-100">✗</span>
+                    At least one lowercase letter (a-z)
+                </li>
+                <li id="uppercase" class="flex items-center text-sm text-gray-500 transition-colors duration-200">
+                    <span class="w-5 h-5 flex-shrink-0 flex items-center justify-center mr-2.5 font-bold transition-transform transform scale-100">✗</span>
+                    At least one uppercase letter (A-Z)
+                </li>
+                <li id="number" class="flex items-center text-sm text-gray-500 transition-colors duration-200">
+                    <span class="w-5 h-5 flex-shrink-0 flex items-center justify-center mr-2.5 font-bold transition-transform transform scale-100">✗</span>
+                    At least one number (0-9)
+                </li>
+                <li id="special" class="flex items-center text-sm text-gray-500 transition-colors duration-200">
+                    <span class="w-5 h-5 flex-shrink-0 flex items-center justify-center mr-2.5 font-bold transition-transform transform scale-100">✗</span>
+                    At least one special character (!@#$%)
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const passwordInput = document.getElementById('passwordInput');
+        const progressBar = document.getElementById('progressBar');
+        const strengthText = document.getElementById('strengthText');
+        const criteria = {
+            length: document.getElementById('length'),
+            lowercase: document.getElementById('lowercase'),
+            uppercase: document.getElementById('uppercase'),
+            number: document.getElementById('number'),
+            special: document.getElementById('special')
+        };
+        const toggleVisibilityBtn = document.getElementById('toggleVisibility');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        const updateCriterionView = (element, met) => {
+            const icon = element.querySelector('span');
+            if (met) {
+                element.classList.remove('text-gray-500');
+                element.classList.add('text-green-400');
+                icon.textContent = '✓';
+                icon.classList.add('animate-bounce');
+            } else {
+                element.classList.remove('text-green-400');
+                element.classList.add('text-gray-500');
+                icon.textContent = '✗';
+                icon.classList.remove('animate-bounce');
+            }
+        };
+
+        const checkPasswordStrength = () => {
+            const password = passwordInput.value;
+            let score = 0;
+
+            const hasLength = password.length >= 8;
+            const hasLowercase = /[a-z]/.test(password);
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+            const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+            updateCriterionView(criteria.length, hasLength);
+            updateCriterionView(criteria.lowercase, hasLowercase);
+            updateCriterionView(criteria.uppercase, hasUppercase);
+            updateCriterionView(criteria.number, hasNumber);
+            updateCriterionView(criteria.special, hasSpecial);
+
+            if (hasLength) score++;
+            if (hasLowercase) score++;
+            if (hasUppercase) score++;
+            if (hasNumber) score++;
+            if (hasSpecial) score++;
+            
+            let strengthLabel = 'Very Weak';
+            let progressColor = 'bg-red-500';
+            let progressWidth = '0%';
+
+            if (password.length === 0) {
+                 score = 0;
+                 strengthLabel = '';
+                 progressWidth = '0%';
+            } else {
+                switch (score) {
+                    case 1:
+                        strengthLabel = 'Weak';
+                        progressWidth = '20%';
+                        progressColor = 'bg-rose-500';
+                        break;
+                    case 2:
+                        strengthLabel = 'Fair';
+                        progressWidth = '40%';
+                        progressColor = 'bg-amber-400';
+                        break;
+                    case 3:
+                        strengthLabel = 'Good';
+                        progressWidth = '60%';
+                        progressColor = 'bg-yellow-500';
+                        break;
+                    case 4:
+                        strengthLabel = 'Strong';
+                        progressWidth = '80%';
+                        progressColor = 'bg-emerald-500';
+                        break;
+                    case 5:
+                        strengthLabel = 'Very Strong';
+                        progressWidth = '100%';
+                        progressColor = 'bg-emerald-600';
+                        break;
+                    default:
+                        strengthLabel = 'Very Weak';
+                        progressWidth = '10%';
+                        progressColor = 'bg-rose-500';
+                }
+                 if (password.length > 0 && score === 0) {
+                    strengthLabel = 'Very Weak';
+                    progressWidth = '10%';
+                    progressColor = 'bg-rose-500';
+                 }
+            }
+
+
+            strengthText.textContent = strengthLabel;
+            progressBar.style.width = progressWidth;
+            
+            progressBar.classList.remove('bg-rose-500', 'bg-amber-400', 'bg-yellow-500', 'bg-emerald-500', 'bg-emerald-600');
+            if(password.length > 0) {
+                progressBar.classList.add(progressColor);
+            }
+        };
+
+        toggleVisibilityBtn.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            eyeIcon.textContent = isPassword ? '🙈' : '👁️';
+        });
+
+        passwordInput.addEventListener('input', checkPasswordStrength);
+        
+        checkPasswordStrength();
+    </script>
+</body>
+</html>
