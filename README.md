@@ -33,7 +33,7 @@ The application will load instantly, and you can begin typing to check your pass
    ```
 2. Run:
    ```bash
-  java PasswordCheckerConsole
+   java PasswordCheckerConsole
    ```
 Follow on-screen instructions.
 
