@@ -2,7 +2,7 @@
 
 This project is Task 3 for the SkillCraft Technology Cybersecurity Internship.
 
-##📝 Description
+## 📝 Description
 Strengthify is a tool designed to analyze the security of a password. It gives users a real-time strength score and a detailed breakdown of criteria that are met (or not met), such as length and character diversity. The goal is to educate users on password best practices in an engaging way.
 
 ## 🎯 Features
